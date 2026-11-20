@@ -55,6 +55,11 @@ model-viewer[ar-status="session-started"] .ar-dica,model-viewer[ar-status="objec
 .conferir{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:grid;gap:8px}
 .conferir h3{margin:0;font-family:var(--f-display);font-weight:600;font-size:1.05rem}
 .conferir ol{margin:0;padding-left:20px;color:var(--muted);display:grid;gap:4px}
+.cores{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cores span{font-size:.85rem;color:var(--muted);margin-right:2px}
+.cor{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0}
+.cor[aria-pressed="true"]{border-color:var(--fg);box-shadow:0 0 0 2px var(--bg) inset}
+.cor:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .peca{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:8px 14px;font:500 .9rem var(--f-body);cursor:pointer}
 .peca[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .peca:focus-visible,.ar-btn:focus-visible,.wa:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -131,6 +136,7 @@ footer{color:var(--muted);font-size:.8rem;border-top:1px solid var(--line);paddi
       <div class="tag" id="cat">Sala de estar</div>
       <h2 id="nome">Sofá 2 lugares</h2>
       <p id="desc"></p>
+      <div class="cores oculto" id="cores" role="group" aria-label="Cor do tecido"></div>
       <dl id="medidas"></dl>
       <a class="wa" id="wa" href="#" target="_blank" rel="noopener">Pedir orçamento no WhatsApp</a>
     </aside>
@@ -153,12 +159,12 @@ footer{color:var(--muted);font-size:.8rem;border-top:1px solid var(--line);paddi
     <div class="passo"><b>Fale com a loja</b><span>Um toque e o pedido chega no WhatsApp com o nome da peça.</span></div>
   </section>
 
-  <footer>Demonstração com loja e peças de exemplo. Modelos 3D: Poly Haven (CC0, uso livre). Funciona em Android com ARCore e em iPhone com iOS 12 ou mais novo.</footer>
+  <footer>Demonstração com loja e peças de exemplo. Modelos 3D: Poly Haven (CC0). Sofá curvo de veludo: Wayfair, LLC, via Khronos glTF Sample Assets (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>). Funciona em Android com ARCore e em iPhone com iOS 12 ou mais novo.</footer>
 </div>
 
 <script>
 const PECAS = [
-  {id:"sofa", nome:"Sofá Chesterfield", cat:"Sala de estar", desc:"Sofá capitonê em couro preto, braços curvos e pés de madeira.", orbit:"30deg 75deg auto"},
+  {id:"sofa_veludo", nome:"Sofá curvo de veludo", cat:"Sala de estar", desc:"Sofá orgânico em veludo, encosto curvo e pés finos de metal. Escolha a cor do tecido.", corPadrao:"Gray", orbit:"25deg 75deg auto"},
   {id:"poltrona_braco", nome:"Poltrona com braços de madeira", cat:"Sala de estar", desc:"Estrutura em madeira clara com almofadas em couro preto.", orbit:"30deg 75deg auto"},
   {id:"poltrona", nome:"Poltrona de leitura", cat:"Sala de estar", desc:"Concha em madeira curvada, assento em couro e base giratória.", orbit:"210deg 75deg auto"},
   {id:"puff", nome:"Puff de couro", cat:"Sala de estar", desc:"Puff estofado em couro grafite, serve de apoio para os pés.", orbit:"30deg 70deg auto"},
@@ -235,6 +241,29 @@ function atualizarAltAr(p){
   altAr.href="intent://arvr.google.com/scene-viewer/1.2?file="+encodeURIComponent(url)+"&mode=ar_only&resizable=false&title="+encodeURIComponent(p.nome)+"#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;S.browser_fallback_url="+encodeURIComponent(location.href)+";end;";
   altAr.classList.remove("oculto");
 }
+
+// ---- cores do tecido (variantes do modelo) ----
+const CORES={"Champagne":["Champanhe","#d9c7a3"],"Navy":["Azul-marinho","#1f2a4d"],"Gray":["Cinza","#8a8d8f"],"Black":["Preto","#1c1c1c"],"Pale Pink":["Rosa-claro","#e8c4c4"]};
+let corAtual=null;
+function msgWa(){ const p=PECAS.find(q=>q.id===atual); if(!p) return;
+  const cor = corAtual && CORES[corAtual] ? " na cor "+CORES[corAtual][0].toLowerCase() : "";
+  document.getElementById("wa").href="https://wa.me/"+WA_NUM+"?text="+encodeURIComponent("Olá! Vi o "+p.nome+cor+" no mostruário 3D e quero um orçamento."); }
+function montarCores(){
+  const box=document.getElementById("cores"), vs=mv.availableVariants||[];
+  box.innerHTML=""; corAtual=null;
+  if(!vs.length){ box.classList.add("oculto"); msgWa(); return; }
+  const p=PECAS.find(q=>q.id===atual);
+  corAtual = (p && p.corPadrao && vs.includes(p.corPadrao)) ? p.corPadrao : vs[0];
+  mv.variantName=corAtual;
+  const lab=document.createElement("span"); lab.textContent="Cor:"; box.append(lab);
+  vs.forEach(v=>{ const b=document.createElement("button"); b.type="button"; b.className="cor"; b.id="cor-"+v.replace(/\s/g,"-");
+    const [nome,hex]=CORES[v]||[v,"#999"]; b.style.background=hex; b.title=nome; b.setAttribute("aria-label",nome);
+    b.setAttribute("aria-pressed", v===corAtual);
+    b.onclick=()=>{ corAtual=v; mv.variantName=v; box.querySelectorAll(".cor").forEach(x=>x.setAttribute("aria-pressed", x===b)); msgWa(); };
+    box.append(b); });
+  box.classList.remove("oculto"); msgWa();
+}
+mv.addEventListener("load", montarCores);
 PECAS.forEach(p=>{ const b=document.createElement("button"); b.type="button"; b.className="peca"; b.id="peca-"+p.id; b.dataset.id=p.id; b.textContent=p.nome; b.onclick=()=>escolher(p); box.append(b); });
 escolher(PECAS[0]);
 try{ new QRCode(document.getElementById("qrcode"),{text:location.href.split("#")[0],width:120,height:120}); }catch(e){}
