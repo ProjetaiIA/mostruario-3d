@@ -41,6 +41,20 @@ model-viewer{width:100%;height:100%;--poster-color:transparent;background:transp
   padding:10px 16px;font:600 .9rem var(--f-body);display:flex;gap:8px;align-items:center;cursor:pointer}
 .ar-btn svg{width:18px;height:18px}
 .pecas{display:flex;gap:8px;flex-wrap:wrap}
+.dot{display:none}
+.dim{background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:2px 7px;font:600 12px var(--f-body);font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+#dimLines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#dimLines line{stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3}
+.sem-medidas .dim,.sem-medidas #dimLines,.oculto{display:none!important}
+.ar-dica{display:none;position:absolute;top:calc(16px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);width:min(90%,420px);background:rgba(20,24,23,.82);color:#fff;border-radius:12px;padding:10px 14px;font:500 14px/1.4 var(--f-body);text-align:center}
+model-viewer[ar-status="session-started"] .ar-dica,model-viewer[ar-status="object-placed"] .ar-dica{display:block}
+.controles{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chk{display:flex;gap:8px;align-items:center;font-size:.9rem;cursor:pointer}
+.chk input{width:18px;height:18px;accent-color:var(--accent)}
+.alt-ar{font-size:.9rem;color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.conferir{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:grid;gap:8px}
+.conferir h3{margin:0;font-family:var(--f-display);font-weight:600;font-size:1.05rem}
+.conferir ol{margin:0;padding-left:20px;color:var(--muted);display:grid;gap:4px}
 .peca{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:8px 14px;font:500 .9rem var(--f-body);cursor:pointer}
 .peca[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .peca:focus-visible,.ar-btn:focus-visible,.wa:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -94,8 +108,21 @@ footer{color:var(--muted);font-size:.8rem;border-top:1px solid var(--line);paddi
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>
             Ver na minha sala
           </button>
+          <button class="dot" slot="hotspot-dot-X-Y+Z" data-position="0 0 0" tabindex="-1"></button>
+          <button class="dot" slot="hotspot-dot+X-Y+Z" data-position="0 0 0" tabindex="-1"></button>
+          <button class="dot" slot="hotspot-dot+X-Y-Z" data-position="0 0 0" tabindex="-1"></button>
+          <button class="dot" slot="hotspot-dot+X+Y+Z" data-position="0 0 0" tabindex="-1"></button>
+          <div class="dim" slot="hotspot-dim-L" data-position="0 0 0" id="dimL"></div>
+          <div class="dim" slot="hotspot-dim-P" data-position="0 0 0" id="dimP"></div>
+          <div class="dim" slot="hotspot-dim-A" data-position="0 0 0" id="dimA"></div>
+          <svg id="dimLines" aria-hidden="true"><line id="lnL"/><line id="lnP"/><line id="lnA"/></svg>
+          <div class="ar-dica">Encoste o dedo no móvel e arraste para mudar de lugar. Gire com dois dedos. As linhas mostram as medidas reais.</div>
         </model-viewer>
         <div class="hint" id="hint">Arraste para girar</div>
+      </div>
+      <div class="controles">
+        <label class="chk" for="verMedidas"><input type="checkbox" id="verMedidas" checked> Mostrar medidas</label>
+        <a class="alt-ar oculto" id="altAr" href="#">Abrir no visualizador do Google</a>
       </div>
       <div class="pecas" role="group" aria-label="Escolha o móvel" id="pecas"></div>
     </div>
@@ -108,6 +135,15 @@ footer{color:var(--muted);font-size:.8rem;border-top:1px solid var(--line);paddi
       <a class="wa" id="wa" href="#" target="_blank" rel="noopener">Pedir orçamento no WhatsApp</a>
     </aside>
   </div>
+
+  <section class="conferir" aria-label="Como conferir o tamanho real">
+    <h3>Como conferir que está no tamanho real</h3>
+    <ol>
+      <li>Com "Mostrar medidas" ligado, as linhas e os números aparecem também na câmera.</li>
+      <li>Estique uma trena ou fita métrica no chão, perto do móvel, e compare com a medida mostrada.</li>
+      <li>Ou encoste o móvel virtual numa parede e num móvel seu de tamanho conhecido.</li>
+    </ol>
+  </section>
 
   <section class="qr" aria-label="Abrir no celular"><div id="qrcode"></div><p><b>Abra no celular</b>A câmera e a realidade aumentada funcionam no celular. Aponte a câmera para o código.</p></section>
 
@@ -122,7 +158,7 @@ footer{color:var(--muted);font-size:.8rem;border-top:1px solid var(--line);paddi
 
 <script>
 const PECAS = [
-  {id:"sofa", nome:"Sofá 2 lugares", cat:"Sala de estar", desc:"Estofado em tecido verde-oliva com almofadas soltas e pés de madeira.", m:{Largura:"210 cm",Profundidade:"90 cm",Altura:"80 cm"}, orbit:"35deg 72deg auto"},
+  {id:"sofa", nome:"Sofá 2 lugares", cat:"Sala de estar", desc:"Estofado em tecido verde-oliva com almofadas soltas e pés de madeira.", m:{Largura:"210 cm",Profundidade:"90 cm",Altura:"86 cm"}, orbit:"35deg 72deg auto"},
   {id:"poltrona", nome:"Poltrona de leitura", cat:"Sala de estar", desc:"Concha em madeira curvada, assento em couro e base giratória.", m:{Largura:"101 cm",Profundidade:"119 cm",Altura:"117 cm"}, orbit:"210deg 75deg auto"},
   {id:"mesa_centro", nome:"Mesa de centro redonda", cat:"Sala de estar", desc:"Tampo redondo em pedra clara sobre base de aço curvado.", m:{Diâmetro:"130 cm",Altura:"49 cm"}, orbit:"20deg 60deg auto"},
   {id:"aparador", nome:"Rack aparador", cat:"Sala de estar", desc:"Rack em madeira escura com portas ripadas e pés de aço.", m:{Largura:"244 cm",Profundidade:"52 cm",Altura:"68 cm"}, orbit:"20deg 75deg auto"},
@@ -148,6 +184,48 @@ function escolher(p){
   const msg = encodeURIComponent("Olá! Vi o "+p.nome+" no mostruário 3D e quero um orçamento.");
   document.getElementById("wa").href = "https://wa.me/"+WA_NUM+"?text="+msg;
   box.querySelectorAll(".peca").forEach(b=>b.setAttribute("aria-pressed", b.dataset.id===p.id));
+  if(typeof atualizarAltAr==="function") atualizarAltAr(p);
+}
+
+// ---- medidas (linhas + rótulos em cm) ----
+const fmt = m => Math.round(m*100)+" cm";
+function ponto(nome){ return mv.queryHotspot("hotspot-"+nome); }
+function linha(id,a,b,rot){
+  const el=document.getElementById(id), p1=ponto(a), p2=ponto(b), r=ponto(rot);
+  if(!p1||!p2) return;
+  el.setAttribute("x1",p1.canvasPosition.x); el.setAttribute("y1",p1.canvasPosition.y);
+  el.setAttribute("x2",p2.canvasPosition.x); el.setAttribute("y2",p2.canvasPosition.y);
+  el.style.opacity = (r && !r.facingCamera) ? 0 : 1;
+}
+function desenhar(){ linha("lnL","dot-X-Y+Z","dot+X-Y+Z","dim-L"); linha("lnP","dot+X-Y+Z","dot+X-Y-Z","dim-P"); linha("lnA","dot+X-Y+Z","dot+X+Y+Z","dim-A"); }
+function posicionarMedidas(){
+  const c=mv.getBoundingBoxCenter(), d=mv.getDimensions();
+  const x=d.x/2, y=d.y/2, z=d.z/2;
+  const set=(n,px,py,pz)=>mv.updateHotspot({name:"hotspot-"+n, position:`${px} ${py} ${pz}`});
+  set("dot-X-Y+Z",c.x-x,c.y-y,c.z+z); set("dot+X-Y+Z",c.x+x,c.y-y,c.z+z);
+  set("dot+X-Y-Z",c.x+x,c.y-y,c.z-z); set("dot+X+Y+Z",c.x+x,c.y+y,c.z+z);
+  set("dim-L",c.x,c.y-y,c.z+z); set("dim-P",c.x+x,c.y-y,c.z); set("dim-A",c.x+x,c.y,c.z+z);
+  document.getElementById("dimL").textContent=fmt(d.x);
+  document.getElementById("dimP").textContent=fmt(d.z);
+  document.getElementById("dimA").textContent=fmt(d.y);
+  requestAnimationFrame(desenhar);
+}
+mv.addEventListener("load", posicionarMedidas);
+mv.addEventListener("camera-change", desenhar);
+let arLoop=false;
+mv.addEventListener("ar-status", e=>{
+  const ativo = e.detail.status==="session-started" || e.detail.status==="object-placed";
+  if(ativo && !arLoop){ arLoop=true; (function tick(){ desenhar(); if(arLoop) requestAnimationFrame(tick); })(); }
+  if(!ativo) arLoop=false;
+});
+document.getElementById("verMedidas").addEventListener("change", e=>{ mv.classList.toggle("sem-medidas", !e.target.checked); if(e.target.checked) desenhar(); });
+// ---- Android: abrir direto no visualizador do Google (tamanho travado) ----
+const altAr=document.getElementById("altAr");
+function atualizarAltAr(p){
+  if(!/android/i.test(navigator.userAgent)) return;
+  const url=new URL("modelos/"+p.id+".glb", location.href).href;
+  altAr.href="intent://arvr.google.com/scene-viewer/1.2?file="+encodeURIComponent(url)+"&mode=ar_only&resizable=false&title="+encodeURIComponent(p.nome)+"#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;S.browser_fallback_url="+encodeURIComponent(location.href)+";end;";
+  altAr.classList.remove("oculto");
 }
 PECAS.forEach(p=>{ const b=document.createElement("button"); b.type="button"; b.className="peca"; b.id="peca-"+p.id; b.dataset.id=p.id; b.textContent=p.nome; b.onclick=()=>escolher(p); box.append(b); });
 escolher(PECAS[0]);
