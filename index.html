@@ -153,16 +153,23 @@ footer{color:var(--muted);font-size:.8rem;border-top:1px solid var(--line);paddi
     <div class="passo"><b>Fale com a loja</b><span>Um toque e o pedido chega no WhatsApp com o nome da peça.</span></div>
   </section>
 
-  <footer>Demonstração com loja e peças de exemplo. Modelos de poltrona, mesa, aparador e cadeira: Poly Haven (CC0). Funciona em Android com ARCore e em iPhone com iOS 12 ou mais novo.</footer>
+  <footer>Demonstração com loja e peças de exemplo. Modelos 3D: Poly Haven (CC0, uso livre). Funciona em Android com ARCore e em iPhone com iOS 12 ou mais novo.</footer>
 </div>
 
 <script>
 const PECAS = [
-  {id:"sofa", nome:"Sofá 2 lugares", cat:"Sala de estar", desc:"Estofado em tecido verde-oliva com almofadas soltas e pés de madeira.", m:{Largura:"210 cm",Profundidade:"90 cm",Altura:"86 cm"}, orbit:"35deg 72deg auto"},
-  {id:"poltrona", nome:"Poltrona de leitura", cat:"Sala de estar", desc:"Concha em madeira curvada, assento em couro e base giratória.", m:{Largura:"101 cm",Profundidade:"119 cm",Altura:"117 cm"}, orbit:"210deg 75deg auto"},
-  {id:"mesa_centro", nome:"Mesa de centro redonda", cat:"Sala de estar", desc:"Tampo redondo em pedra clara sobre base de aço curvado.", m:{Diâmetro:"130 cm",Altura:"49 cm"}, orbit:"20deg 60deg auto"},
-  {id:"aparador", nome:"Rack aparador", cat:"Sala de estar", desc:"Rack em madeira escura com portas ripadas e pés de aço.", m:{Largura:"244 cm",Profundidade:"52 cm",Altura:"68 cm"}, orbit:"20deg 75deg auto"},
-  {id:"cadeira", nome:"Cadeira de jantar", cat:"Sala de jantar", desc:"Encosto alto estofado em couro capitonê, pés de madeira.", m:{Largura:"43 cm",Profundidade:"58 cm",Altura:"97 cm"}, orbit:"35deg 75deg auto"}
+  {id:"sofa", nome:"Sofá Chesterfield", cat:"Sala de estar", desc:"Sofá capitonê em couro preto, braços curvos e pés de madeira.", orbit:"30deg 75deg auto"},
+  {id:"poltrona_braco", nome:"Poltrona com braços de madeira", cat:"Sala de estar", desc:"Estrutura em madeira clara com almofadas em couro preto.", orbit:"30deg 75deg auto"},
+  {id:"poltrona", nome:"Poltrona de leitura", cat:"Sala de estar", desc:"Concha em madeira curvada, assento em couro e base giratória.", orbit:"210deg 75deg auto"},
+  {id:"puff", nome:"Puff de couro", cat:"Sala de estar", desc:"Puff estofado em couro grafite, serve de apoio para os pés.", orbit:"30deg 70deg auto"},
+  {id:"mesa_centro", nome:"Mesa de centro redonda", cat:"Sala de estar", desc:"Tampo redondo em pedra clara sobre base de aço curvado.", redonda:true, orbit:"20deg 60deg auto"},
+  {id:"mesa_centro_concreto", nome:"Mesa de centro concreto", cat:"Sala de estar", desc:"Tampo em concreto com detalhe e pés em madeira.", orbit:"30deg 65deg auto"},
+  {id:"mesa_lateral", nome:"Mesa lateral", cat:"Sala de estar", desc:"Mesa de canto em madeira maciça com prateleira.", orbit:"30deg 70deg auto"},
+  {id:"aparador", nome:"Rack aparador", cat:"Sala de estar", desc:"Rack em madeira escura com portas ripadas e pés de aço.", orbit:"20deg 75deg auto"},
+  {id:"estante_nichos", nome:"Estante de nichos", cat:"Sala e escritório", desc:"Estante em madeira clara com nichos abertos e cestos de tecido.", orbit:"30deg 75deg auto"},
+  {id:"estante_gaveteiro", nome:"Estante com gaveteiro", cat:"Quarto e escritório", desc:"Estrutura de metal preto com prateleiras e gavetas em madeira.", orbit:"30deg 75deg auto"},
+  {id:"cadeira", nome:"Cadeira de jantar", cat:"Sala de jantar", desc:"Encosto alto estofado em couro capitonê, pés de madeira.", orbit:"35deg 75deg auto"},
+  {id:"banqueta", nome:"Banqueta alta", cat:"Cozinha e bancada", desc:"Banqueta alta em madeira escura, para bancada americana.", orbit:"30deg 75deg auto"}
 ];
 const WA_NUM = ""; // número da loja, ex.: 5587999999999
 const mv = document.getElementById("mv"), box = document.getElementById("pecas");
@@ -179,8 +186,6 @@ function escolher(p){
   document.getElementById("nome").textContent = p.nome;
   document.getElementById("cat").textContent = p.cat;
   document.getElementById("desc").textContent = p.desc;
-  const dl = document.getElementById("medidas"); dl.innerHTML = "";
-  for (const [k,v] of Object.entries(p.m)){ const dt=document.createElement("dt"); dt.textContent=k; const dd=document.createElement("dd"); dd.textContent=v; dl.append(dt,dd); }
   const msg = encodeURIComponent("Olá! Vi o "+p.nome+" no mostruário 3D e quero um orçamento.");
   document.getElementById("wa").href = "https://wa.me/"+WA_NUM+"?text="+msg;
   box.querySelectorAll(".peca").forEach(b=>b.setAttribute("aria-pressed", b.dataset.id===p.id));
@@ -208,6 +213,9 @@ function posicionarMedidas(){
   document.getElementById("dimL").textContent=fmt(d.x);
   document.getElementById("dimP").textContent=fmt(d.z);
   document.getElementById("dimA").textContent=fmt(d.y);
+  const p=PECAS.find(q=>q.id===atual), dl=document.getElementById("medidas"); dl.innerHTML="";
+  const linhas = p && p.redonda ? [["Diâmetro",d.x],["Altura",d.y]] : [["Largura",d.x],["Profundidade",d.z],["Altura",d.y]];
+  for(const [k,v] of linhas){ const dt=document.createElement("dt"); dt.textContent=k; const dd=document.createElement("dd"); dd.textContent=fmt(v); dl.append(dt,dd); }
   requestAnimationFrame(desenhar);
 }
 mv.addEventListener("load", posicionarMedidas);
