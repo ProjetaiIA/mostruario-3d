@@ -175,7 +175,10 @@ const PECAS = [
   {id:"estante_nichos", nome:"Estante de nichos", cat:"Sala e escritório", desc:"Estante em madeira clara com nichos abertos e cestos de tecido.", orbit:"30deg 75deg auto"},
   {id:"estante_gaveteiro", nome:"Estante com gaveteiro", cat:"Quarto e escritório", desc:"Estrutura de metal preto com prateleiras e gavetas em madeira.", orbit:"30deg 75deg auto"},
   {id:"cadeira", nome:"Cadeira de jantar", cat:"Sala de jantar", desc:"Encosto alto estofado em couro capitonê, pés de madeira.", orbit:"35deg 75deg auto"},
-  {id:"banqueta", nome:"Banqueta alta", cat:"Cozinha e bancada", desc:"Banqueta alta em madeira escura, para bancada americana.", orbit:"30deg 75deg auto"}
+  {id:"banqueta", nome:"Banqueta alta", cat:"Cozinha e bancada", desc:"Banqueta alta em madeira escura, para bancada americana.", orbit:"30deg 75deg auto"},
+  {id:"poltrona_veludo", nome:"Poltrona de veludo", cat:"Sala de estar", desc:"Encosto e assento capitonê em veludo, pés finos em madeira escura. Em verde-pavão ou manga.", corPadrao:"Peacock Velvet", orbit:"30deg 75deg auto"},
+  {id:"mesa_lateral_tambor", nome:"Mesa lateral tambor", cat:"Sala de estar", desc:"Tambor canelado em nogueira com tampo em pedra clara.", redonda:true, orbit:"30deg 65deg auto"},
+  {id:"mesa_jantar_lua", nome:"Mesa de jantar redonda", cat:"Sala de jantar", desc:"Tampo redondo de 1,30 m em pedra clara sobre pedestal canelado em nogueira.", redonda:true, orbit:"30deg 62deg auto"}
 ];
 const WA_NUM = ""; // número da loja, ex.: 5587999999999
 const mv = document.getElementById("mv"), box = document.getElementById("pecas");
@@ -196,6 +199,7 @@ function escolher(p){
   document.getElementById("wa").href = "https://wa.me/"+WA_NUM+"?text="+msg;
   box.querySelectorAll(".peca").forEach(b=>b.setAttribute("aria-pressed", b.dataset.id===p.id));
   if(typeof atualizarAltAr==="function") atualizarAltAr(p);
+  if(typeof atualizarQr==="function") atualizarQr();
 }
 
 // ---- medidas (linhas + rótulos em cm) ----
@@ -243,7 +247,7 @@ function atualizarAltAr(p){
 }
 
 // ---- cores do tecido (variantes do modelo) ----
-const CORES={"Champagne":["Champanhe","#d9c7a3"],"Navy":["Azul-marinho","#1f2a4d"],"Gray":["Cinza","#8a8d8f"],"Black":["Preto","#1c1c1c"],"Pale Pink":["Rosa-claro","#e8c4c4"]};
+const CORES={"Champagne":["Champanhe","#d9c7a3"],"Navy":["Azul-marinho","#1f2a4d"],"Gray":["Cinza","#8a8d8f"],"Black":["Preto","#1c1c1c"],"Pale Pink":["Rosa-claro","#e8c4c4"],"Peacock Velvet":["Verde-pavão","#0f6b6b"],"Mango Velvet":["Manga","#e0782c"]};
 let corAtual=null;
 function msgWa(){ const p=PECAS.find(q=>q.id===atual); if(!p) return;
   const cor = corAtual && CORES[corAtual] ? " na cor "+CORES[corAtual][0].toLowerCase() : "";
@@ -265,8 +269,16 @@ function montarCores(){
 }
 mv.addEventListener("load", montarCores);
 PECAS.forEach(p=>{ const b=document.createElement("button"); b.type="button"; b.className="peca"; b.id="peca-"+p.id; b.dataset.id=p.id; b.textContent=p.nome; b.onclick=()=>escolher(p); box.append(b); });
-escolher(PECAS[0]);
-try{ new QRCode(document.getElementById("qrcode"),{text:location.href.split("#")[0],width:120,height:120}); }catch(e){}
+// link direto (QR de outros sites): ?peca=<id>&cor=<variante>
+const PARAMS=new URLSearchParams(location.search);
+const pecaLink=PECAS.find(q=>q.id===PARAMS.get("peca"));
+if(pecaLink && PARAMS.get("cor")) pecaLink.corPadrao=PARAMS.get("cor");
+let qr=null; const BASE=location.origin+location.pathname;
+function atualizarQr(){ const t=BASE+"?peca="+encodeURIComponent(atual);
+  try{ if(qr) qr.makeCode(t); else qr=new QRCode(document.getElementById("qrcode"),{text:t,width:120,height:120}); }catch(e){} }
+escolher(pecaLink||PECAS[0]);
+if(pecaLink) document.getElementById("peca-"+pecaLink.id)?.scrollIntoView({block:"nearest",inline:"center"});
+atualizarQr();
 mv.addEventListener("camera-change", e=>{ if(e.detail.source==="user") document.getElementById("hint").hidden=true; });
 </script>
 
