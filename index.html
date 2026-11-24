@@ -69,6 +69,8 @@ model-viewer[ar-status="session-started"] .ar-dica,model-viewer[ar-status="objec
 dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0;font-variant-numeric:tabular-nums}
 dt{color:var(--muted);font-size:.85rem}
 dd{margin:0;font-weight:500}
+.guardar{display:block;width:100%;margin-top:8px;text-align:center;background:transparent;color:inherit;border:1px solid currentColor;border-radius:10px;padding:11px;font-family:inherit;font-weight:600;font-size:.95rem;cursor:pointer}
+.guardar-ok{font-size:.85rem;opacity:.8;margin:6px 0 0}
 .wa{display:block;text-align:center;text-decoration:none;background:var(--accent);color:var(--accent-fg);border-radius:10px;padding:12px;font-weight:600}
 .como{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 @media (max-width:640px){.como{grid-template-columns:minmax(0,1fr)}}
@@ -139,6 +141,8 @@ footer{color:var(--muted);font-size:.8rem;border-top:1px solid var(--line);paddi
       <div class="cores oculto" id="cores" role="group" aria-label="Cor do tecido"></div>
       <dl id="medidas"></dl>
       <a class="wa" id="wa" href="#" target="_blank" rel="noopener">Pedir orçamento no WhatsApp</a>
+      <button class="guardar" id="guardar" type="button">Guardar para ver em casa</button>
+      <p class="guardar-ok" id="guardarOk" hidden>Link copiado. Cole no seu WhatsApp ou nas notas para abrir quando chegar em casa.</p>
     </aside>
   </div>
 
@@ -269,6 +273,13 @@ function montarCores(){
 }
 mv.addEventListener("load", montarCores);
 PECAS.forEach(p=>{ const b=document.createElement("button"); b.type="button"; b.className="peca"; b.id="peca-"+p.id; b.dataset.id=p.id; b.textContent=p.nome; b.onclick=()=>escolher(p); box.append(b); });
+// guardar o link da peça (escaneou na loja, abre em casa)
+document.getElementById("guardar").onclick=async()=>{
+  const p=PECAS.find(q=>q.id===atual); const url=BASE+"?peca="+encodeURIComponent(atual)+(corAtual?"&cor="+encodeURIComponent(corAtual):"");
+  const txt="Ver "+p.nome+" na minha sala: "+url;
+  if(navigator.share){ try{ await navigator.share({title:p.nome,text:"Ver "+p.nome+" na minha sala",url}); return; }catch(e){ if(e.name==="AbortError") return; } }
+  try{ await navigator.clipboard.writeText(txt); document.getElementById("guardarOk").hidden=false; }catch(e){ prompt("Copie o link:",url); }
+};
 // link direto (QR de outros sites): ?peca=<id>&cor=<variante>
 const PARAMS=new URLSearchParams(location.search);
 const pecaLink=PECAS.find(q=>q.id===PARAMS.get("peca"));
